@@ -623,10 +623,10 @@ public class SoapObject extends AttributeContainer implements KvmSerializable {
             Object prop = properties.elementAt(i);
             if(prop instanceof PropertyInfo) {
                 buf.append(EMPTY_STRING)
-                        .append(((PropertyInfo) prop).getName())
-                        .append("=")
-                        .append(getProperty(i))
-                        .append("; ");
+                    .append(((PropertyInfo) prop).getName())
+                    .append("=")
+                    .append(getProperty(i))
+                    .append("; ");
             } else {
                 buf.append(((SoapObject) prop).toString());
             }
