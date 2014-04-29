@@ -24,18 +24,8 @@ import java.io.IOException;
  */
 public class KeepAliveHttpsTransportSE extends HttpsTransportSE
 {
-    private final String host;
-    private final int port;
-    private final String file;
-    private final int timeout;
-    private ServiceConnection serviceConnection;
-
     public KeepAliveHttpsTransportSE (String host, int port, String file, int timeout) {
         super(host, port, file, timeout);
-        this.host = host;
-        this.port = port;
-        this.file = file;
-        this.timeout = timeout;
     }
 
     /**
@@ -47,10 +37,9 @@ public class KeepAliveHttpsTransportSE extends HttpsTransportSE
     //@Override
     public ServiceConnection getServiceConnection() throws IOException
     {
-        if (serviceConnection == null) {
-            serviceConnection = new HttpsServiceConnectionSEIgnoringConnectionClose(host, port, file, timeout);
-            serviceConnection.setRequestProperty("Connection", "keep-alive");
-        }
+        ServiceConnection serviceConnection = 
+                new HttpsServiceConnectionSEIgnoringConnectionClose(host, port, file, timeout);
+        serviceConnection.setRequestProperty("Connection", "keep-alive");
         return serviceConnection;
     }
 

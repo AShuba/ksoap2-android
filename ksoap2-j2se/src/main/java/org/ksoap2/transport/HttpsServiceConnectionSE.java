@@ -1,19 +1,15 @@
 package org.ksoap2.transport;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSocketFactory;
-
 import org.ksoap2.HeaderProperty;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Proxy;
 import java.net.URL;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * HttpsServiceConnectionSE is a service connection that uses a https url connection and requires explicit setting of
@@ -47,8 +43,29 @@ public class HttpsServiceConnectionSE implements ServiceConnection {
      * @param timeout the timeout for the connection in milliseconds
      * @throws IOException
      */
-    public HttpsServiceConnectionSE(String host, int port, String file,
-                                     int timeout) throws IOException {
+    public HttpsServiceConnectionSE(String host, int port, String file, int timeout) throws IOException {
+        this(null, host, port, file, timeout);
+    }
+
+    /**
+     * Create the transport with the supplied parameters.
+     * @param proxy proxy server to use
+     * @param host the name of the host e.g. webservices.somewhere.com
+     * @param port the http port to connect on
+     * @param file the path to the file on the webserver that represents the
+     * webservice e.g. /api/services/myservice.jsp
+     * @param timeout the timeout for the connection in milliseconds
+     * @throws IOException
+     */
+    public HttpsServiceConnectionSE(Proxy proxy, String host, int port, String file, int timeout) throws IOException {
+
+        if (proxy == null) {
+            connection = (HttpsURLConnection) new URL(HttpsTransportSE.PROTOCOL, host, port, file).openConnection();
+        } else {
+            connection =
+                    (HttpsURLConnection) new URL(HttpsTransportSE.PROTOCOL, host, port, file).openConnection(proxy);
+
+        }
         connection = (HttpsURLConnection) new URL(HttpsTransportSE.PROTOCOL, host, port, file).openConnection();
         updateConnectionParameters(timeout);
     }
@@ -84,6 +101,10 @@ public class HttpsServiceConnectionSE implements ServiceConnection {
         }
 
         return retList;
+    }
+
+    public int getResponseCode() throws IOException {
+        return connection.getResponseCode();
     }
 
     public void setRequestProperty(String key, String value) {

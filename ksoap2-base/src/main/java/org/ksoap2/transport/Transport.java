@@ -25,7 +25,9 @@ package org.ksoap2.transport;
 
 import java.util.List;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.Proxy;
+import java.net.URL;
 
 import org.ksoap2.*;
 import org.kxml2.io.*;
@@ -113,7 +115,11 @@ abstract public class Transport {
         XmlPullParser xp = new KXmlParser();
         xp.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
         xp.setInput(is, null);
-        envelope.parse(xp);
+        envelope.parse(xp);  
+        /*
+         * Fix memory leak when running on android in strict mode. Issue 133
+         */
+        is.close();        
     }
 
     /**
@@ -175,7 +181,7 @@ abstract public class Transport {
      * returned by the web service will be returned to the caller in the form of a
      * <code>List</code> of <code>HeaderProperty</code> instances.
      * 
-     * @param targetNamespace
+     * @param soapAction
      *            the namespace with which to perform the call in.
      * @param envelope
      *            the envelope the contains the information for the call.
@@ -185,19 +191,40 @@ abstract public class Transport {
      * @return Headers returned by the web service as a <code>List</code> of
      * <code>HeaderProperty</code> instances.
      */
-    abstract public List call(String targetNamespace, SoapEnvelope envelope, List headers)
+    abstract public List call(String soapAction, SoapEnvelope envelope, List headers)
+            throws IOException, XmlPullParserException;
+
+    /**
+     * Perform a soap call with a given namespace and the given envelope providing
+     * any extra headers that the user requires such as cookies. Headers that are
+     * returned by the web service will be returned to the caller in the form of a
+     * <code>List</code> of <code>HeaderProperty</code> instances.
+     *
+     * @param soapAction
+     *            the namespace with which to perform the call in.
+     * @param envelope
+     *            the envelope the contains the information for the call.
+     * @param headers
+     *   <code>List</code> of <code>HeaderProperty</code> headers to send with the SOAP request.
+     * @param outputFile
+     *              a file to stream the response into rather than parsing it, streaming happens when file is not null
+     *
+     * @return Headers returned by the web service as a <code>List</code> of
+     * <code>HeaderProperty</code> instances.
+     */
+    abstract public List call(String soapAction, SoapEnvelope envelope, List headers, File outputFile)
             throws IOException, XmlPullParserException;
 
     /**
      * Perform a soap call with a given namespace and the given envelope.
      * 
-     * @param targetNamespace
+     * @param soapAction
      *            the namespace with which to perform the call in.
      * @param envelope
      *            the envelope the contains the information for the call.
      */
-    public void call(String targetNamespace, SoapEnvelope envelope) throws IOException, XmlPullParserException {
-        call(targetNamespace, envelope, null);
+    public void call(String soapAction, SoapEnvelope envelope) throws IOException, XmlPullParserException {
+        call(soapAction, envelope, null);
      }
 
     /**
@@ -205,21 +232,30 @@ abstract public class Transport {
      *
      * @return Host name
      */
-    abstract public String getHost();
+    public String getHost()  throws MalformedURLException {
 
+        return new URL(url).getHost();
+    }
+        
     /**
      * Return the port number of the host that is specified as the web service target
      *
      * @return Port number
      */
-    abstract public int getPort();
-
+    public int getPort() throws MalformedURLException {
+        
+        return new URL(url).getPort();
+    }
+        
     /**
      * Return the path to the web service target
      *
      * @return The URL's path
      */
-    abstract public String getPath();
+    public String getPath() throws MalformedURLException {
+
+        return new URL(url).getPath();
+    }
 
     abstract public ServiceConnection getServiceConnection() throws IOException;
 }
